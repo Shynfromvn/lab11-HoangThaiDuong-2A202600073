@@ -1,15 +1,36 @@
 """
-Lab 11 — Configuration & API Key Setup
+Lab 11 - Configuration & API Key Setup
 """
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+from google.adk.models.lite_llm import LiteLlm
+
+
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
 
 
 def setup_api_key():
-    """Load Google API key from environment or prompt."""
-    if "GOOGLE_API_KEY" not in os.environ:
-        os.environ["GOOGLE_API_KEY"] = input("Enter Google API Key: ")
-    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "0"
-    print("API key loaded.")
+    """Load OpenAI settings from .env or environment."""
+    project_root = Path(__file__).resolve().parents[2]
+    load_dotenv(project_root / ".env")
+
+    if "OPENAI_API_KEY" not in os.environ:
+        os.environ["OPENAI_API_KEY"] = input("Enter OpenAI API Key: ")
+
+    os.environ.setdefault("OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
+    print(f"OpenAI API key loaded. Model: {os.environ['OPENAI_MODEL']}")
+
+
+def get_openai_model_name() -> str:
+    """Return the raw OpenAI model name for SDK and NeMo use."""
+    return os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
+
+
+def build_adk_model() -> LiteLlm:
+    """Create an ADK LiteLLM wrapper backed by OpenAI."""
+    return LiteLlm(model=f"openai/{get_openai_model_name()}")
 
 
 # Allowed banking topics (used by topic_filter)
